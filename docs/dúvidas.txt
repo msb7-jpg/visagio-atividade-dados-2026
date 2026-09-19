@@ -1,0 +1,10 @@
+Fala pessoal, bom dia! Tudo bem?
+
+Surgiu uma dúvida sobre como salvar o timestamp ao longo das camadas.
+No documento de especificações, a coluna ingestion_datetime deve ser criada na camada Bronze e usada na
+Silver para a regra de deduplicação.
+
+Mas nas camadas seguintes (Silver e Gold), a gnt faz alguma modificação nesse timestamp? por exemplo
+
+Sobrescrever o ingestion_datetime com current_timestamp() no momento da escrita de cada camada ou então só repassao ingestion_datetime original da Bronze -> Silver -> Gold
+
