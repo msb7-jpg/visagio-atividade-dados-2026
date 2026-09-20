@@ -75,6 +75,7 @@ flowchart TD
 │   ├── silver/
 │   └── gold/
 └── docs/                           # Documentações complementares de engenharia e decisões
+    ├── INSTRUCOES_DEPLOY_DATABRICKS.md
     ├── DECISOES_ARQUITETURAIS.md
     ├── PLANO_EXECUCAO_SILVER_TO_GOLD.md
     ├── OBSERVACOES_DADOS.md
