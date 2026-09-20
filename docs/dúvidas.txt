@@ -1,6 +1,4 @@
-Fala pessoal, bom dia! Tudo bem?
-
-Surgiu uma dúvida sobre como salvar o timestamp ao longo das camadas.
+Dúvida sobre como salvar o timestamp ao longo das camadas.
 No documento de especificações, a coluna ingestion_datetime deve ser criada na camada Bronze e usada na
 Silver para a regra de deduplicação.
 

@@ -23,3 +23,11 @@ data/gold/
 spark-warehouse/
 derby.log
 metastore_db/
+
+example-caminha/
+example-visagio/
+
+# Environment variables
+.env
+.env.*
+!.env.example

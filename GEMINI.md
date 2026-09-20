@@ -237,6 +237,63 @@ Este documento define as regras de desenvolvimento, legibilidade e estilo de có
 
 ### Exemplos:
 * ❌ **Evite**: Declarar `STATUS_TRANSLATION_MAP`, `SUPPORTED_DATE_FORMATS`, `KNOWN_GENRES_LIST` e `ENTITY_TYPE_MAPPINGS` todos misturados em uma única célula de setup no topo do notebook.
-* ✅ **Prefira**: Definir `KNOWN_GENRES_LIST` diretamente no bloco de transformação de `silver.tb_generos`, `STATUS_TRANSLATION_MAP` no bloco de `silver.tb_info_filmes`, e assim por diante.
-
 ---
+
+## 11. Metadados e Operações na Nuvem (Databricks Serverless Lakehouse)
+
+Esta seção documenta a topologia, caminhos de persistência, particularidades técnicas e comandos operacionais para manipulação do Lakehouse no ambiente Databricks na nuvem.
+
+### 11.1. Topologia e Metadados do Ambiente
+* **Workspace Host**: `https://dbc-a72b35a2-522b.cloud.databricks.com`
+* **Provedor Cloud**: AWS
+* **Modo de Computação Suportado**: **Databricks Serverless Compute** exclusivamente.
+* **Catálogo Ativo**: `workspace` (Unity Catalog gerenciado).
+* **Schema Padrão**: `workspace.default`.
+* **Volume Gerenciado da Landing Zone**:
+  * Caminho DBFS/Volume: `dbfs:/Volumes/workspace/default/cinedata/landing/`
+  * Caminho POSIX no driver: `/Volumes/workspace/default/cinedata/landing/`
+* **Caminho dos Notebooks no Workspace**:
+  * `/Workspace/CineData_Analytics/Landing_to_Bronze`
+  * `/Workspace/CineData_Analytics/Bronze_to_Silver`
+  * `/Workspace/CineData_Analytics/Silver_to_Gold`
+* **Workflow / Job de Orquestração**:
+  * Nome do Job: `cinedata_lakehouse_pipeline`
+  * Job ID: `697557736242035`
+
+### 11.2. Particularidades Técnicas do Runtime Serverless
+1. **Ausência de `sparkContext` (JVM)**:
+   * No Databricks Serverless, qualquer chamada direta a `spark.sparkContext` lança exceção (`JVM_ATTRIBUTE_NOT_SUPPORTED`).
+   * Operações de log level e configurações de contexto devem ser condicionadas com `if not IS_DATABRICKS:`.
+2. **Dependências Python e PyPI**:
+   * O Serverless Task não permite o campo `libraries` aninhado na task individual do job manifest.
+   * Dependências devem ser nativas da imagem do runtime ou modelos padrão do ecossistema Databricks (ex.: utilizar `pydantic.BaseModel` padrão em vez de pacotes que exigem injeções externas de JVM como `sparkdantic`).
+3. **Resolução de Diretórios da Landing Zone**:
+   * Os notebooks verificam a existência física de `/Volumes/workspace/default/cinedata/landing`. Caso presente, priorizam a leitura direta do volume gerenciado.
+
+### 11.3. Ciclo de Deploy e Comandos Operacionais (Databricks CLI)
+
+* **Deploy Idempotente Automatizado**:
+  ```bash
+  ./scripts/deploy_databricks.sh
+  ```
+  *(Sincroniza os CSVs no Volume, importa os notebooks com `--overwrite` e atualiza as configurações do Job via `databricks jobs reset`).*
+
+* **Disparo Imediato do Pipeline**:
+  ```bash
+  databricks jobs run-now 697557736242035 --no-wait
+  ```
+
+* **Monitoramento de Execução**:
+  ```bash
+  # Consultar status geral da run
+  databricks jobs get-run <RUN_ID>
+
+  # Consultar saída e stack trace de uma task com falha
+  databricks jobs get-run-output <TASK_RUN_ID>
+
+  # Listar histórico de runs do job
+  databricks runs list --job-id 697557736242035
+
+  # Cancelar execução em andamento
+  databricks jobs cancel-run <RUN_ID>
+  ```

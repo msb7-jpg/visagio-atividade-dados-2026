@@ -20,14 +20,6 @@ Este documento consolida as decisões arquiteturais, justificativas de modelagem
 
 ---
 
-## 2. silver.tb_financeiro_filmes (Origem: `bronze.tb_movies_financials`)
-
-### Decisão 2.1: Chave Primária, Grão da Tabela e Deduplicação
-* **Contexto**: A tabela Bronze acumulou 636.990 registros devido a execuções sucessivas de ingestão no modo `append`, enquanto a base original possuía 106.165 linhas e 99.006 filmes distintos.
-* **Decisão**: A chave primária (natural) da tabela é unicamente o **`id`** (`id_filme`), definindo o grão como **1 registro único por filme**. A deduplicação é realizada selecionando exclusivamente a versão mais recente com base na coluna `ingestion_datetime` (`Window.partitionBy("id").orderBy(col("ingestion_datetime").desc())`).
-* **Justificativa**:
-  - Garante a integridade e unicidade do catálogo para a camada analítica (`fact_movies_performance`), impedindo que métricas financeiras (soma de receita/orçamento) sejam multiplicadas ou distorcidas por duplicatas brutas ou re-execuções de ingestão.
-  - Alinha-se ao princípio da arquitetura Medalhão: a Bronze armazena histórico bruto imutável (*append-only*), enquanto a Silver consolida o estado atualizado (*SCD Type 1 / Latest record*).
 
 ### Decisão 2.2: Higienização de Métricas Monetárias e Notações de Escala
 * **Contexto**: As colunas `budget` e `revenue` contêm ruídos heterogêneos: textos sentinela (`"Unknown"`, `"Não Informado"`), símbolos monetários (`$`, `USD`), espaços, notações abreviadas de escala (`10.0M`, `18.0K`), valores zerados e valores negativos (ex: `-800526015`).

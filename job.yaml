@@ -1,59 +1,36 @@
-name: "cinedata_lakehouse_pipeline"
-
+name: cinedata_lakehouse_pipeline
 schedule:
-  quartz_cron_expression: "0 0 6 * * ?"
-  timezone_id: "America/Sao_Paulo"
-  pause_status: "UNPAUSED"
-
-job_clusters:
-  - job_cluster_key: "cinedata_analytics_cluster"
-    new_cluster:
-      spark_version: "14.3.x-scala2.12"
-      spark_conf:
-        spark.sql.streapming.forceDeleteTempCheckpointLocation: "true"
-        spark.databricks.delta.preview.enabled: "true"
-      node_type_id: "Standard_DS3_v2"
-      autoscale:
-        min_workers: 1
-        max_workers: 4
-      custom_tags:
-        Project: "CineData Analytics"
-        Environment: "Production"
-
+  quartz_cron_expression: 0 0 6 * * ?
+  timezone_id: America/Recife
+  pause_status: UNPAUSED
 tasks:
-  - task_key: "Task_Landing_to_Bronze"
-    job_cluster_key: "cinedata_analytics_cluster"
-    notebook_task:
-      notebook_path: "/Workspace/CineData_Analytics/Landing_to_Bronze"
-      source: "WORKSPACE"
-    timeout_seconds: 3600
-    max_retries: 2
-    min_retry_interval_millis: 60000
-    retry_on_timeout: true
-
-  - task_key: "Task_Bronze_to_Silver"
-    depends_on:
-      - task_key: "Task_Landing_to_Bronze"
-    job_cluster_key: "cinedata_analytics_cluster"
-    notebook_task:
-      notebook_path: "/Workspace/CineData_Analytics/Bronze_to_Silver"
-      source: "WORKSPACE"
-    timeout_seconds: 3600
-    max_retries: 2
-    min_retry_interval_millis: 60000
-    retry_on_timeout: true
-
-  - task_key: "Task_Silver_to_Gold"
-    depends_on:
-      - task_key: "Task_Bronze_to_Silver"
-    job_cluster_key: "cinedata_analytics_cluster"
-    notebook_task:
-      notebook_path: "/Workspace/CineData_Analytics/Silver_to_Gold"
-      source: "WORKSPACE"
-    timeout_seconds: 3600
-    max_retries: 2
-    min_retry_interval_millis: 60000
-    retry_on_timeout: true
-
-format: "MULTI_TASK"
+- task_key: Task_Landing_to_Bronze
+  notebook_task:
+    notebook_path: /Workspace/CineData_Analytics/Landing_to_Bronze
+    source: WORKSPACE
+  timeout_seconds: 3600
+  max_retries: 2
+  min_retry_interval_millis: 60000
+  retry_on_timeout: true
+- task_key: Task_Bronze_to_Silver
+  depends_on:
+  - task_key: Task_Landing_to_Bronze
+  notebook_task:
+    notebook_path: /Workspace/CineData_Analytics/Bronze_to_Silver
+    source: WORKSPACE
+  timeout_seconds: 3600
+  max_retries: 2
+  min_retry_interval_millis: 60000
+  retry_on_timeout: true
+- task_key: Task_Silver_to_Gold
+  depends_on:
+  - task_key: Task_Bronze_to_Silver
+  notebook_task:
+    notebook_path: /Workspace/CineData_Analytics/Silver_to_Gold
+    source: WORKSPACE
+  timeout_seconds: 3600
+  max_retries: 2
+  min_retry_interval_millis: 60000
+  retry_on_timeout: true
+format: MULTI_TASK
 max_concurrent_runs: 1

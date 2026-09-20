@@ -1,0 +1,94 @@
+Table gold.dim_movies {
+  sk_movie_id bigint [pk]
+  id_filme text
+  titulo text
+  data_lancamento date
+  ano_lancamento integer
+  duracao_minutos integer
+  idioma_original text
+  status_filme text
+  sinopse text
+}
+
+Table gold.dim_genres {
+  sk_genre_id bigint [pk]
+  nome_genero text
+}
+
+Table gold.dim_people {
+  sk_person_id bigint [pk]
+  nome_pessoa text
+  tipo_pessoa text
+}
+
+Table gold.dim_companies {
+  sk_company_id bigint [pk]
+  nome_produtora text 
+}
+
+Table gold.dim_reviews {
+  sk_review_id bigint [pk]
+  sk_movie_id bigint [ref: > gold.dim_movies.sk_movie_id]
+  qtd_avaliacoes_usuarios integer
+  nota_media_usuarios double
+}
+
+Table gold.bridge_movie_genre {
+  sk_movie_id bigint [ref: > gold.dim_movies.sk_movie_id]
+  sk_genre_id bigint [ref: > gold.dim_genres.sk_genre_id]
+  indexes {
+    (sk_movie_id, sk_genre_id) [pk]
+  }
+}
+
+Table gold.bridge_movie_person {
+  sk_movie_id bigint [ref: > gold.dim_movies.sk_movie_id]
+  sk_person_id bigint [ref: > gold.dim_people.sk_person_id]
+  indexes {
+    (sk_movie_id, sk_person_id) [pk]
+  }
+}
+
+Table gold.bridge_movie_company {
+  sk_movie_id bigint [ref: > gold.dim_movies.sk_movie_id]
+  sk_company_id bigint [ref: > gold.dim_companies.sk_company_id]
+  indexes {
+    (sk_movie_id, sk_company_id) [pk]
+  }
+}
+
+Table gold.fact_movies_performance {
+  sk_movie_id bigint [pk, ref: > gold.dim_movies.sk_movie_id]
+  orcamento_usd decimal(18,2)
+  receita_usd decimal(18,2)
+  lucro_usd decimal(18,2)
+  orcamento_brl decimal(18,2)
+  receita_brl decimal(18,2)
+  lucro_brl decimal(18,2)
+  popularidade double
+  nota_media_tmdb double
+  qtd_votos_tmdb integer
+  nota_media_imdb double
+  qtd_votos_imdb integer
+}
+
+Table gold.gold_genai_movies_context {
+  movie_id text [pk]
+  title text
+  llm_context_document text
+}
+
+DiagramView "Gold Layer — Dimensional Model" {
+  Tables {
+    gold.dim_movies
+    gold.dim_genres
+    gold.dim_people
+    gold.dim_companies
+    gold.dim_reviews
+    gold.bridge_movie_genre
+    gold.bridge_movie_person
+    gold.bridge_movie_company
+    gold.fact_movies_performance
+    gold.gold_genai_movies_context
+  }
+}
