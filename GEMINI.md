@@ -16,7 +16,7 @@ Este documento define as regras de desenvolvimento, legibilidade e estilo de có
 * ✅ **Prefira**: `[lit(item) for key_value_pair in translation_map.items() for item in key_value_pair]`
 * ❌ **Evite**: `df`
 * ✅ **Prefira**: `dataframe` ou `movies_dataframe`
-
+* Algumas exceções de coisas que são realmente simples como DATA_DIR, é notorio que DIR é diretorio, ou entao MIN que é evidente que é minimo e MAX que é MAXIMUM
 ---
 
 ## 2. Imutabilidade e Nomes Descritivos para Etapas de Transformação
@@ -49,9 +49,9 @@ Este documento define as regras de desenvolvimento, legibilidade e estilo de có
 * ❌ **Evite**: `val_k.cast("double") * 1000`, `val_m.cast("double") * 1000000`, `val_b.cast("double") * 1000000000`, `* 100`
 * ✅ **Prefira**:
   ```python
-  THOUSAND_MULTIPLIER = 1_000
-  MILLION_MULTIPLIER = 1_000_000
-  BILLION_MULTIPLIER = 1_000_000_000
+  THOUSAND = 1_000
+  MILLION = 1_000_000
+  BILLION = 1_000_000_000
   PERCENTAGE_FACTOR = 100
   DECIMAL_PRECISION = "decimal(18,2)"
   ```
@@ -201,7 +201,7 @@ Este documento define as regras de desenvolvimento, legibilidade e estilo de có
   dataframe_reviews_silver = transform_tb_movies_reviews(dataframe_reviews_bronze)
   write_dataframe_with_timestamp(
       dataframe=dataframe_reviews_silver,
-      target_path=SILVER_DIRECTORY / "silver.tb_avaliacoes_usuarios"
+      target_path=SILVER_DIR / "silver.tb_avaliacoes_usuarios"
   )
   dataframe_reviews_silver.printSchema()
   dataframe_reviews_silver.show(5, truncate=False)
@@ -240,120 +240,3 @@ Este documento define as regras de desenvolvimento, legibilidade e estilo de có
 * ✅ **Prefira**: Definir `KNOWN_GENRES_LIST` diretamente no bloco de transformação de `silver.tb_generos`, `STATUS_TRANSLATION_MAP` no bloco de `silver.tb_info_filmes`, e assim por diante.
 
 ---
-
-## 11. Constantes de Colunas com Acesso Estático em Dataclasses (Sem Instanciação Redundante)
-
-* Para mapear nomes de colunas de forma fortemente tipada e imutável, utilize classes ou `@dataclass(frozen=True)`.
-* **Proibida a instanciação redundante da classe para variáveis em caixa alta** (ex.: `BACEN_COTACAO_COLUMNS = BacenCotacaoColumns()`), pois isso introduz verbosidade desnecessária e infla o escopo global.
-* Acesse os atributos de coluna diretamente na própria classe como propriedades estáticas.
-
-### Exemplos:
-* ❌ **Evite**:
-  ```python
-  @dataclass(frozen=True)
-  class BacenCotacaoColumns:
-      COTACAO_COMPRA: str = "cotacaoCompra"
-      DATA_HORA_COTACAO: str = "dataHoraCotacao"
-
-  BACEN_COTACAO_COLUMNS = BacenCotacaoColumns()
-  # Uso excessivamente verboso:
-  col(BACEN_COTACAO_COLUMNS.COTACAO_COMPRA)
-  ```
-* ✅ **Prefira**:
-  ```python
-  @dataclass(frozen=True)
-  class BacenCotacaoColumns:
-      COTACAO_COMPRA: str = "cotacaoCompra"
-      DATA_HORA_COTACAO: str = "dataHoraCotacao"
-
-  # Acesso direto, limpo e estático:
-  col(BacenCotacaoColumns.COTACAO_COMPRA)
-  ```
-
----
-
-## 12. Nomenclatura PascalCase para Contratos de Schema (StructType)
-
-* Instâncias estruturadas de `StructType` que definem os contratos e esquemas canônicos de tabelas devem seguir nomenclatura em **`PascalCase`** (ex.: `TbCotacaoDolarSilverSchema`, `TbInfoFilmesSilverSchema`, `DimFilmesGoldSchema`, `RawMoviesInfoBronzeSchema`).
-* Isso confere aos contratos de esquema a semântica visual e arquitetural de tipos/classes de dados estruturados, diferenciando-os de instâncias dinâmicas de DataFrame e variáveis de fluxo.
-
-### Exemplos:
-* ❌ **Evite**: `schema_tb_cotacao_dolar_silver = StructType(...)`, `SCHEMA_TB_COTACAO_DOLAR_SILVER = StructType(...)`
-* ✅ **Prefira**: `TbCotacaoDolarSilverSchema = StructType(...)`, `DimFilmesGoldSchema = StructType(...)`
-
----
-
-## 13. Contratos Tipados de Entrada e Saída (Zero Magic Strings)
-
-* Nenhuma string literal de coluna deve ser passada diretamente solta em `col("...")`, `.select(...)` ou filtros.
-* Para cada tabela ou etapa de transformação, declare ou reutilize dataclasses imutáveis `@dataclass(frozen=True)` separando explicitamente as colunas de entrada (*Input/Bronze*) e as colunas de saída (*Output/Silver/Gold*).
-* Isso garante rastreabilidade estrita (*lineage* de dados) e proteção contra erros tipográficos em tempo de desenvolvimento.
-
-### Exemplos:
-* ❌ **Evite**:
-  ```python
-  transformed_dataframe = raw_dataframe.select(
-      try_cast("id", "integer").alias("id_filme"),
-      sanitize_numeric_metric("popularity", "double").alias("popularidade")
-  )
-  ```
-* ✅ **Prefira**:
-  ```python
-  @dataclass(frozen=True)
-  class RawMoviesMetricsColumns:
-      ID: str = "id"
-      POPULARITY: str = "popularity"
-
-  @dataclass(frozen=True)
-  class TbMetricasEngajamentoSilverColumns:
-      MOVIE_ID: str = "id_filme"
-      POPULARITY: str = "popularidade"
-  ```
-
----
-
-## 14. Ciclo de Vida do Timestamp de Ingestão (`ingestion_datetime`)
-
-* A coluna `ingestion_datetime` é gerada **uma única vez** no momento da ingestão na camada **Bronze** (via `write_dataframe_with_timestamp` na ingestão Landing ➔ Bronze).
-* Nas camadas subsequentes (**Silver** e **Gold**), o `ingestion_datetime` gerado na Bronze **deve ser preservado e repassado** através das projeções (`.select(...)`).
-* A função de persistência nas camadas Silver e Gold deve ser exclusivamente `write_dataframe(dataframe, target_path)` (salvando em Parquet sem injetar novos timestamps artificiais).
-
----
-
-## 15. Formatação e Legibilidade de Transformações (Expression Preparation First)
-
-* Para manter alta legibilidade e evitar chamadas aninhadas profundas e confusas dentro de `.select(...)` ou `.withColumn(...)`, estruture as transformações em 3 etapas sequenciais e claras:
-  1. **Atribuição das variáveis de coluna de entrada** (`col_input_... = col(...)`);
-  2. **Preparação das expressões semânticas de transformação** (`expr_... = ...`);
-  3. **Projeção limpa no `.select(...)`**.
-
-### Exemplos:
-* ❌ **Evite**:
-  ```python
-  transformed_dataframe = (
-      deduplicated_dataframe.select(
-          try_cast("id", "integer").alias(Columns.MOVIE_ID),
-          sanitize_numeric_metric("popularity", "double", minimum_value=0.0).alias(Columns.POPULARITY),
-          sanitize_numeric_metric("vote_average", "double", minimum_value=0.0, maximum_value=10.0).alias(Columns.VOTE_AVERAGE)
-      )
-  )
-  ```
-* ✅ **Prefira**:
-  ```python
-  col_input_id = col(RawColumns.ID)
-  col_input_popularity = col(RawColumns.POPULARITY)
-  col_input_vote_average = col(RawColumns.VOTE_AVERAGE)
-
-  expr_movie_id = try_cast(col_input_id, "integer").alias(SilverColumns.MOVIE_ID)
-  expr_popularity = sanitize_numeric_metric(col_input_popularity, "double", minimum_value=0.0).alias(SilverColumns.POPULARITY)
-  expr_vote_average = sanitize_numeric_metric(col_input_vote_average, "double", minimum_value=MIN_RATING, maximum_value=MAX_RATING).alias(SilverColumns.VOTE_AVERAGE)
-
-  transformed_dataframe = deduplicated_dataframe.select(
-      expr_movie_id,
-      expr_popularity,
-      expr_vote_average
-  )
-  ```
-
----
-

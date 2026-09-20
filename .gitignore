@@ -8,3 +8,18 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Data lake layers (arquivos Parquet gerados pelo pipeline — não versionados)
+data/landing/
+data/bronze/
+data/silver/
+data/gold/
+
+# Spark event logs
+spark-warehouse/
+derby.log
+metastore_db/

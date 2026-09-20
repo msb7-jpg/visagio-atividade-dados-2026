@@ -60,17 +60,21 @@ flowchart TD
 
 ```text
 .
-├── Landing_to_Bronze.ipynb     # Notebook de ingestão dos dados brutos para a camada Bronze
-├── Bronze_to_Silver.ipynb      # Notebook de conformação, tipagem segura e regras de negócio Silver
-├── Silver_to_Gold.ipynb        # Notebook de modelagem Star Schema, Data Mart GenAI e Analytics
-├── job.yaml                    # Manifesto de orquestração do Databricks Workflow (Tasks & Schedule)
-├── README.md                   # Documentação executiva, técnica e dicionário de dados
-├── pyproject.toml              # Dependências e gerenciamento de ambiente Python (uv)
-├── data/                       # Armazenamento em formato Parquet do Data Lakehouse
+├── notebooks/
+│   ├── 00_Setup_Ambiente.ipynb     # Infraestrutura compartilhada: Spark, paths, utilitários e DQ
+│   ├── Landing_to_Bronze.ipynb     # Ingestão de CSVs e API PTAX → camada Bronze (Parquet)
+│   ├── Bronze_to_Silver.ipynb      # Conformação, tipagem segura e regras de negócio → Silver
+│   └── Silver_to_Gold.ipynb        # Modelagem Star Schema, Data Mart GenAI e Analytics → Gold
+├── run_pipeline.sh                 # Script de execução sequencial do pipeline completo (local)
+├── job.yaml                        # Manifesto de orquestração do Databricks Workflow
+├── README.md                       # Documentação executiva, técnica e dicionário de dados
+├── pyproject.toml                  # Dependências e gerenciamento de ambiente Python (uv)
+├── data/                           # Armazenamento em formato Parquet do Data Lakehouse
+│   ├── landing/                    # Arquivos CSV brutos de entrada
 │   ├── bronze/
 │   ├── silver/
 │   └── gold/
-└── docs/                       # Documentações complementares de engenharia e decisões
+└── docs/                           # Documentações complementares de engenharia e decisões
     ├── DECISOES_ARQUITETURAIS.md
     ├── PLANO_EXECUCAO_SILVER_TO_GOLD.md
     ├── OBSERVACOES_DADOS.md
@@ -302,21 +306,102 @@ flowchart LR
 ## 7. Como Reproduzir e Executar Localmente
 
 ### Pré-requisitos
-* Python 3.12+ (ou 3.14 via `uv` / `.venv`)
-* Java JDK 17+ configurado (`JAVA_HOME`)
-* Apache Spark 3.5+ / PySpark 4.x
 
-### Execução dos Notebooks
+| Requisito | Versão mínima | Verificação |
+| :--- | :--- | :--- |
+| Python | 3.14+ | `python --version` |
+| Java JDK | 17+ | `java -version` |
+| `uv` | qualquer | `uv --version` |
+
+> **JAVA_HOME**: O PySpark exige Java. Verifique com `echo $JAVA_HOME`. Se vazio, instale via `sudo apt install openjdk-17-jdk` e exporte `export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64`.
+
+---
+
+### Setup Inicial (uma única vez)
+
 ```bash
-# 1. Instalar dependências gerenciadas
-uv sync
+# 1. Instalar todas as dependências (pipeline + ferramentas de execução local)
+uv sync --extra dev
 
-# 2. Executar o pipeline de Landing para Bronze
-python -c "import runpy; runpy.run_path('Landing_to_Bronze.ipynb')"
+# 2. Registrar o kernel Jupyter no seu ambiente de usuário
+uv run python -m ipykernel install --user --name visagio --display-name "visagio (3.14)"
 
-# 3. Executar o pipeline de Bronze para Silver
-python -c "import runpy; runpy.run_path('Bronze_to_Silver.ipynb')"
-
-# 4. Executar o pipeline de Silver para Gold
-python -c "import runpy; runpy.run_path('Silver_to_Gold.ipynb')"
+# 3. Colocar os CSVs brutos na Landing Zone
+#    Os 5 arquivos abaixo devem estar em data/landing/ antes de rodar o pipeline:
+#      - movies_info_TMDB_IMDB.csv
+#      - movies_financials_IMDB_TMDB.csv
+#      - movies_metrics_IMDB_TMDB.csv
+#      - credits_and_tags_IMDB_TMDB.csv
+#      - movies_reviews.csv
 ```
+
+---
+
+### Ordem de Execução dos Notebooks
+
+```text
+00_Setup_Ambiente.ipynb          ← executado automaticamente via %run pelos demais
+        ↓
+Landing_to_Bronze.ipynb          ← Passo 1: ingere CSVs + API PTAX → Bronze (Parquet)
+        ↓
+Bronze_to_Silver.ipynb           ← Passo 2: tipagem, higienização, forward fill → Silver
+        ↓
+Silver_to_Gold.ipynb             ← Passo 3: Star Schema, Data Mart GenAI, Analytics → Gold
+```
+
+---
+
+### Opção A — Jupyter Lab (Interativo)
+
+```bash
+# Abrir o Jupyter Lab na pasta notebooks/
+uv run jupyter lab notebooks/
+
+# No navegador, abra e execute em sequência:
+# 1. Landing_to_Bronze.ipynb  → Kernel: "visagio (3.14)" → Run All
+# 2. Bronze_to_Silver.ipynb   → Kernel: "visagio (3.14)" → Run All
+# 3. Silver_to_Gold.ipynb     → Kernel: "visagio (3.14)" → Run All
+```
+
+> **Sobre as variáveis "não definidas" no editor**: Ao abrir um notebook que usa `%run ./00_Setup_Ambiente.ipynb`, ferramentas como VS Code ou JupyterLab marcam as funções e variáveis do setup como "não encontradas" antes da primeira execução. Isso é comportamento esperado do language server — os símbolos só existem no namespace do kernel após o `%run` ser executado. Desaparecem completamente após **Run All** (ou ao executar a primeira célula).
+
+---
+
+### Opção B — CLI / Headless (sem interface gráfica)
+
+```bash
+# Executar o pipeline completo sequencialmente
+bash run_pipeline.sh
+
+# Ou individualmente, notebook a notebook:
+uv run jupyter nbconvert \
+    --to notebook --execute \
+    --ExecutePreprocessor.kernel_name=visagio \
+    --ExecutePreprocessor.timeout=3600 \
+    --output notebooks/Landing_to_Bronze.ipynb \
+    notebooks/Landing_to_Bronze.ipynb
+
+uv run jupyter nbconvert \
+    --to notebook --execute \
+    --ExecutePreprocessor.kernel_name=visagio \
+    --ExecutePreprocessor.timeout=3600 \
+    --output notebooks/Bronze_to_Silver.ipynb \
+    notebooks/Bronze_to_Silver.ipynb
+
+uv run jupyter nbconvert \
+    --to notebook --execute \
+    --ExecutePreprocessor.kernel_name=visagio \
+    --ExecutePreprocessor.timeout=3600 \
+    --output notebooks/Silver_to_Gold.ipynb \
+    notebooks/Silver_to_Gold.ipynb
+```
+
+---
+
+### Opção C — VS Code
+
+1. Abra a pasta `notebooks/` no VS Code.
+2. Abra qualquer notebook (`.ipynb`).
+3. No canto superior direito, clique em **"Select Kernel"** → **"Jupyter Kernel"** → selecione **`visagio (3.14)`**.
+4. Execute com **"Run All"** respeitando a ordem acima.
+
