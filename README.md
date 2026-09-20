@@ -132,7 +132,7 @@ flowchart LR
 
 O fluxo foi orquestrado no **Databricks Workflows** utilizando **Serverless Compute**, executado com sucesso ponta a ponta:
 
-![Databricks Workflow Run](successful_run.png)
+![Databricks Workflow Run](docs/successful_run.png)
 
 ### Scripts Operacionais (`scripts/`)
 * **Deploy no Databricks**: `./scripts/deploy_databricks.sh` (sincroniza notebooks no workspace e configura o job via `job.yaml`).
