@@ -1,5 +1,14 @@
 # CineData Analytics — Engenharia de Dados & Lakehouse
 
+<p align="left">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/Apache_Spark-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white" alt="Apache Spark" />
+  <img src="https://img.shields.io/badge/Databricks-FF3621?style=for-the-badge&logo=databricks&logoColor=white" alt="Databricks" />
+  <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonwebservices&logoColor=white" alt="AWS" />
+  <img src="https://img.shields.io/badge/Delta_Lake-00ADD8?style=for-the-badge&logo=deltalake&logoColor=white" alt="Delta Lake" />
+  <img src="https://img.shields.io/badge/Architecture-Medallion-0052CC?style=for-the-badge&logo=diagram-next&logoColor=white" alt="Medallion Architecture" />
+</p>
+
 Pipeline de dados medalhão (**Landing $\rightarrow$ Bronze $\rightarrow$ Silver $\rightarrow$ Gold**) construído com PySpark no Databricks Serverless, cobrindo ingestão, limpeza/conformação, modelagem dimensional (*Star Schema*) e preparação de Data Mart para IA Generativa (RAG).
 
 ---
