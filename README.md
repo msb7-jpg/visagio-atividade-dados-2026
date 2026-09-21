@@ -10,6 +10,7 @@ Todas as análises foram executadas sobre a camada **Gold** (`gold.fact_movies_p
 
 ### Pergunta 1: Qual é a receita total (em R$) somada de todos os filmes da base?
 * **Resultado**: **R$ 838.275.201.039,60** (~ R$ 838,27 bilhões).
+* **Taxa de Câmbio Utilizada**: **R$ 5,1569** por US$ 1,00 (taxa PTAX de Compra do Banco Central de 18/09/2026, obtida via API Olinda).
 * **Consulta Spark**:
   ```python
   fact_movies_performance.select(
@@ -70,6 +71,8 @@ Todas as análises foram executadas sobre a camada **Gold** (`gold.fact_movies_p
 | 8 | The Super Mario Bros. Movie | US$ 1.355.725.263,00 | R$ 6.995.542.357,08 |
 | 9 | Black Panther | US$ 1.349.926.083,00 | R$ 6.965.618.588,28 |
 | 10 | Star Wars: The Last Jedi | US$ 1.332.698.830,00 | R$ 6.876.725.962,80 |
+
+> **Nota Cambial**: A conversão da receita para Reais (R$) foi realizada utilizando a cotação PTAX de Compra do Banco Central de **R$ 5,1569** por dólar (referência de 18/09/2026), padronizada no pipeline Silver.
 
 ---
 
@@ -135,7 +138,7 @@ flowchart LR
 3. **`movies_metrics_IMDB_TMDB.csv`**: Notas e métricas de popularidade/votos TMDB e IMDb.
 4. **`credits_and_tags_IMDB_TMDB.csv`**: Elenco, diretores, roteiristas, gêneros e produtoras.
 5. **`movies_reviews.csv`**: Avaliações textuais e notas de usuários.
-6. **API Banco Central (PTAX)**: Cotação diária do dólar comercial (USD $\rightarrow$ BRL) para conversão cambial com forward fill para fins de semana e feriados.
+6. **API Banco Central (PTAX)**: Cotação diária do dólar comercial (USD $\rightarrow$ BRL) via API Olinda do BACEN. Para a conversão monetária das métricas financeiras (orçamento, receita e lucro), utilizou-se a taxa PTAX de Compra mais recente da série histórica disponível (**R$ 5,1569**, de 18/09/2026), com propagação contínua (*Forward Fill*) para fins de semana e feriados.
 
 ---
 
