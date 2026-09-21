@@ -13,6 +13,32 @@ Pipeline de dados medalhão (**Landing $\rightarrow$ Bronze $\rightarrow$ Silver
 
 ---
 
+## Tabela de Conteúdos
+
+- **1. [Respostas das Perguntas de Negócio](#1-respostas-das-perguntas-de-negócio-analytics)**
+  - [Pergunta 1: Receita total somada em R$](#pergunta-1-qual-é-a-receita-total-em-r-somada-de-todos-os-filmes-da-base)
+  - [Pergunta 2: Top 5 filmes com maior popularidade](#pergunta-2-quais-são-os-5-filmes-com-maior-popularidade)
+  - [Pergunta 3: Contagem de filmes por gênero (ranking decrescente)](#pergunta-3-quantos-filmes-cada-gênero-possui-maior-para-menor)
+  - [Pergunta 4: Top 10 filmes em receita com `RANK()`](#pergunta-4-top-10-filmes-de-maior-receita-com-rank)
+  - [Pergunta 5: Ator com mais participações nos últimos 2 anos](#pergunta-5-qual-ator-teve-mais-participações-nos-filmes-lançados-nos-últimos-2-anos)
+  - [Pergunta 6: Produtora com maior lucro nos últimos 5 anos](#pergunta-6-qual-produtora-teve-o-maior-lucro-nos-últimos-5-anos)
+- **2. [Modelagem Camada Gold](#2-modelagem-dimensional-camada-gold)**
+  - [Fato e Dimensões (Star Schema)](#2-modelagem-dimensional-camada-gold)
+  - [Data Mart para IA Generativa (`gold_genai_movies_context`)](#2-modelagem-dimensional-camada-gold)
+- **3. [Arquitetura e Fluxo do Pipeline](#3-arquitetura-e-fluxo-do-pipeline)**
+  - [Origens e Ingestão (Landing Zone + API PTAX BACEN)](#arquivos-de-ingestão-landing-zone)
+  - [Notebooks de Processamento](#3-arquitetura-e-fluxo-do-pipeline):
+    - Ingestão Raw: [Landing_to_Bronze.ipynb](notebooks/Landing_to_Bronze.ipynb)
+    - Limpeza e Padronização: [Bronze_to_Silver.ipynb](notebooks/Bronze_to_Silver.ipynb)
+    - Modelagem Star Schema & GenAI: [Silver_to_Gold.ipynb](notebooks/Silver_to_Gold.ipynb)
+- **4. [Execução dos Workflows no Databricks](#4-execução-e-orquestração)**
+  - [Especificação do Job](job.yaml)
+  - [Comprovação de Execução com Sucesso](#4-execução-e-orquestração)
+  - [Scripts Operacionais (`deploy_databricks.sh`, `run_job.sh`)](#scripts-operacionais-scripts)
+- **5. [Linhagem e Regras de Transformação por Origem](#5-linhagem-e-regras-de-transformação-detalhadas-por-origem)**
+
+---
+
 ## 1. Respostas das Perguntas de Negócio (Analytics)
 
 Todas as análises foram executadas sobre a camada **Gold** (`gold.fact_movies_performance` e dimensões relacionadas):
