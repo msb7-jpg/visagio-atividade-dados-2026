@@ -44,7 +44,7 @@ Pipeline de dados medalhão (**Landing $\rightarrow$ Bronze $\rightarrow$ Silver
 Todas as análises foram executadas sobre a camada **Gold** (`gold.fact_movies_performance` e dimensões relacionadas):
 
 ### Pergunta 1: Qual é a receita total (em R$) somada de todos os filmes da base?
-* **Resultado**: **R$ 837.771.586.093,24** (~ R$ 837,77 bilhões).
+* **Resultado**: **R$ 837.762.389.824,54** (~ R$ 837,76 bilhões).
 * **Taxa de Câmbio Utilizada**: **R$ 5,1569** por US$ 1,00 (taxa PTAX de Compra do Banco Central de 18/09/2026, obtida via API Olinda).
 * **Consulta Spark**:
   ```python
@@ -71,25 +71,25 @@ Todas as análises foram executadas sobre a camada **Gold** (`gold.fact_movies_p
 ### Pergunta 3: Quantos filmes cada gênero possui? (Maior para menor)
 | Rank | Gênero Canônico | Qtd. Filmes |
 | :---: | :--- | :---: |
-| **1º** | Drama | 32.286 |
-| **2º** | Documentary | 18.996 |
-| **3º** | Comedy | 18.624 |
-| **4º** | Thriller | 10.274 |
-| **5º** | Horror | 9.729 |
-| **6º** | Romance | 7.639 |
-| **7º** | Action | 6.049 |
-| **8º** | Crime | 4.747 |
-| **9º** | Animation | 4.469 |
-| **10º** | TV Movie | 4.079 |
-| **11º** | Science Fiction | 3.769 |
-| **12º** | Family | 3.722 |
-| **13º** | Mystery | 3.317 |
-| **14º** | Fantasy | 3.278 |
-| **15º** | Adventure | 2.870 |
-| **16º** | Music | 2.792 |
-| **17º** | History | 2.416 |
-| **18º** | War | 960 |
-| **19º** | Western | 410 |
+| **1º** | Drama | 32.193 |
+| **2º** | Documentary | 18.946 |
+| **3º** | Comedy | 18.445 |
+| **4º** | Thriller | 10.211 |
+| **5º** | Horror | 9.590 |
+| **6º** | Romance | 7.627 |
+| **7º** | Action | 5.935 |
+| **8º** | Crime | 4.710 |
+| **9º** | Animation | 4.365 |
+| **10º** | TV Movie | 4.072 |
+| **11º** | Family | 3.718 |
+| **12º** | Science Fiction | 3.695 |
+| **13º** | Mystery | 3.274 |
+| **14º** | Fantasy | 3.236 |
+| **15º** | Adventure | 2.826 |
+| **16º** | Music | 2.766 |
+| **17º** | History | 2.400 |
+| **18º** | War | 953 |
+| **19º** | Western | 407 |
 
 ---
 
@@ -112,9 +112,21 @@ Todas as análises foram executadas sobre a camada **Gold** (`gold.fact_movies_p
 ---
 
 ### Pergunta 5: Qual ator teve mais participações nos filmes lançados nos últimos 2 anos?
-* **Resultado**: **Kevin Hart** lidera com **64 participações**, seguido por Melissa Ponzio (59), Josh Hartnett (59), John Travolta (59) e John Cena (59).
 
----
+* **Resultado Canônico (Após Deduplicação por Obra / `tconst`)**:
+  | Posição | Nome do Ator | Participações em Filmes Lançados |
+  | :---: | :--- | :---: |
+  | **1º** | **Suhas** | **4 participações** |
+  | 2º | Dean Cain | 3 participações |
+  | 3º | Chris Spinelli | 3 participações |
+  | 4º | Eric Roberts | 3 participações |
+  | 5º | Goparaju Ramana | 3 participações |
+
+> **Investigação Técnica e Análise de Anomalias de Catálogo**:
+> * **O caso "Kevin Hart" (64 participações nominais)**:
+>   * Na base bruta de origem (`movies_info_TMDB_IMDB.csv`), o filme *Die Hart 2: Die Harter* (código IMDb `tt32094375`) foi inserido em **1.716 linhas replicadas sob 61 IDs numéricos distintos** do TMDB (`1300214`, `1362673`, `1611488`, `1476515`, etc.), todos com a mesma data de lançamento (`30/05/2024`).
+>   * Uma deduplicação cega apenas pela chave primária local (`id`) preserva todos os 61 registros, fazendo o ator principal (Kevin Hart) disparar artificialmente para **64 participações** (59 réplicas de *Die Hart 2* + 5 do especial de comédia *Mark Twain Prize*) e coadjuvantes como Melissa Ponzio, Josh Hartnett e John Travolta aparecerem com 59 participações cada.
+>   * Ao aplicar a **deduplicação canônica por obra na camada Silver** — agrupando prioritariamente pelo código universal `tconst` (IMDb) e mantendo o registro mais recente por `ingestion_datetime` —, Kevin Hart é reconduzido ao seu número real de **2 obras lançadas no período**, expurgando as distorções analíticas.
 
 ### Pergunta 6: Qual produtora teve o maior Lucro nos últimos 5 anos?
 | Posição | Produtora | Lucro Acumulado (US$) |

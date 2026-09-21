@@ -7,12 +7,18 @@ Este documento consolida as decisões arquiteturais, justificativas de modelagem
 
 ## 1. silver.tb_info_filmes (Origem: `bronze.tb_movies_info`)
 
-### Decisão 1.1: Descarte da coluna `tconst` (IMDb ID)
-* **Contexto**: A tabela bruta de filmes contém o identificador alfanumérico do IMDb (`tconst`) além do identificador numérico `id` (TMDB).
-* **Decisão**: A coluna `tconst` foi **descartada** na camada Silver.
-* **Justificativa**: 
-  - O identificador de relacionamento entre todas as tabelas do Lakehouse (`tb_movies_financials`, `tb_movies_metrics`, `tb_credits_and_tags`, `tb_movies_reviews`) é unicamente o `id` numérico.
-  - Como `tconst` não faz parte do contrato de dados da `silver.tb_info_filmes` nem das dimensões da camada Gold (`dim_movies`), seu descarte otimiza o armazenamento e reduz o tráfego de rede e memória nas camadas a jusante (*downstream*).
+### Decisão 1.1: Deduplicação Canônica por Obra Cinematográfica (`tconst`) vs. Identificador Técnico (`id`)
+* **Contexto**: 
+  - A base de origem (`movies_info_TMDB_IMDB.csv`) apresenta anomalias graves de duplicidade de catálogo decorrentes de cadastros múltiplos no TMDB. Foram identificados **321 códigos IMDb (`tconst`) associados a múltiplos `id` numéricos do TMDB**, somando **986 IDs distintos** (665 instâncias redundantes).
+  - O exemplo mais crítico é o filme *Die Hart 2: Die Harter* (`tt32094375`), que constava em **1.716 linhas duplicadas espalhadas por 61 IDs numéricos distintos** do TMDB (`1300214`, `1362673`, `1611488`, `1476515`, etc.), todos com a mesma data de lançamento (`30/05/2024`).
+* **Decisão de Engenharia e Negócio**:
+  - **Prioridade da Integridade Real da Obra sobre a Chave Técnica**: Entendeu-se expressamente que a integridade analítica da obra cinematográfica real (representada pelo identificador canônico e universal da indústria IMDb `tconst`) é soberana em relação à chave técnica local do TMDB (`id`).
+  - **Mecanismo de Resolução**: A deduplicação na camada Silver foi implementada particionando prioritariamente pela chave universal `coalesce(tconst, id)`, ordenando por `ingestion_datetime DESC NULLS LAST` e desempatando por `id ASC`.
+  - **Preservação de Schema e Descarte da Coluna `tconst`**: Uma vez resolvida a unicidade da obra e selecionado o registro canônico mais atual, a coluna `tconst` é descartada e o `id_filme` técnico eleito é mantido para honrar estritamente o contrato de dados oficial especificado para a camada Silver e viabilizar os joins a jusante com as demais tabelas.
+* **Impactos Métricos e Analíticos**:
+  - **Participações de Elenco**: Neutralizou a distorção artificial de Kevin Hart (que antes apresentava 64 participações nominais decorrentes das réplicas de *Die Hart 2*, e agora apresenta suas 2 obras legítimas), revelando o ranking verídico do biênio liderado por Suhas (4 participações).
+  - **Contagem por Gênero**: Expurgou centenas de contagens fantasmas de gêneros em filmes replicados (ex.: Action com 5.935 filmes reais vs. 6.049 inflados).
+  - **Integridade Financeira**: Eliminou **US$ 489.329,00** de receita duplicada e **US$ 2.054.749,00** de orçamento fantasma distribuídos entre múltiplos IDs de uma mesma obra.
 
 ### Decisão 1.2: Normalização e Tradução Declarativa de Status com Fallback
 * **Contexto**: Registros de status contêm variações de caixa, hífens redundantes (`"Post-Production"`, `"in-production"`) e valores desconhecidos.
@@ -20,6 +26,15 @@ Este documento consolida as decisões arquiteturais, justificativas de modelagem
 
 ---
 
+
+## 2. silver.tb_financeiro_filmes (Origem: `bronze.tb_movies_financials`)
+
+### Decisão 2.1: Deduplicação com Desempate por Maior Valor Preenchido
+* **Contexto**: A origem apresenta múltiplas linhas com o mesmo `id` contendo dados conflitantes (ex.: uma linha com faturamento preenchido coexistindo com outra linha zerada ou com texto sentinela `Unknown`).
+* **Decisão**: 
+  - As colunas de receita e orçamento são sanitizadas e tipadas antes do particionamento.
+  - A janela de deduplicação prioriza explicitamente o maior valor: `orderBy(col("receita_usd").desc_nulls_last(), col("orcamento_usd").desc_nulls_last(), col("ingestion_datetime").desc())`.
+  - Isso garante que a melhor informação financeira seja preservada para cada filme sem perdas decorrentes de deduplicações determinísticas cegas.
 
 ### Decisão 2.2: Higienização de Métricas Monetárias e Notações de Escala
 * **Contexto**: As colunas `budget` e `revenue` contêm ruídos heterogêneos: textos sentinela (`"Unknown"`, `"Não Informado"`), símbolos monetários (`$`, `USD`), espaços, notações abreviadas de escala (`10.0M`, `18.0K`), valores zerados e valores negativos (ex: `-800526015`).
