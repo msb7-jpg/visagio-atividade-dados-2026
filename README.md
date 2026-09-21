@@ -9,7 +9,7 @@ Pipeline de dados medalhão (**Landing $\rightarrow$ Bronze $\rightarrow$ Silver
 Todas as análises foram executadas sobre a camada **Gold** (`gold.fact_movies_performance` e dimensões relacionadas):
 
 ### Pergunta 1: Qual é a receita total (em R$) somada de todos os filmes da base?
-* **Resultado**: **R$ 838.275.201.039,60** (~ R$ 838,27 bilhões).
+* **Resultado**: **R$ 837.771.586.093,24** (~ R$ 837,77 bilhões).
 * **Taxa de Câmbio Utilizada**: **R$ 5,1569** por US$ 1,00 (taxa PTAX de Compra do Banco Central de 18/09/2026, obtida via API Olinda).
 * **Consulta Spark**:
   ```python
@@ -61,16 +61,16 @@ Todas as análises foram executadas sobre a camada **Gold** (`gold.fact_movies_p
 ### Pergunta 4: Top 10 filmes de maior receita com `RANK()`
 | Rank | Título do Filme | Receita (US$) | Receita (R$) |
 | :---: | :--- | :---: | :---: |
-| 1 | Avengers: Endgame | US$ 2.800.000.000,00 | R$ 14.448.000.000,00 |
-| 2 | Avatar: The Way of Water | US$ 2.320.250.281,00 | R$ 11.972.491.449,96 |
-| 3 | AVENGERS: INFINITY WAR | US$ 2.052.415.039,00 | R$ 10.590.461.601,24 |
-| 4 | spider-man: no way home | US$ 1.921.847.111,00 | R$ 9.916.731.092,76 |
-| 5 | The Lion King | US$ 1.663.075.401,00 | R$ 8.581.469.069,16 |
-| 6 | Top Gun: Maverick | US$ 1.488.732.821,00 | R$ 7.681.861.356,36 |
-| 7 | Barbie | US$ 1.428.545.028,00 | R$ 7.371.292.344,48 |
-| 8 | The Super Mario Bros. Movie | US$ 1.355.725.263,00 | R$ 6.995.542.357,08 |
-| 9 | Black Panther | US$ 1.349.926.083,00 | R$ 6.965.618.588,28 |
-| 10 | Star Wars: The Last Jedi | US$ 1.332.698.830,00 | R$ 6.876.725.962,80 |
+| 1 | Avengers: Endgame | US$ 2.800.000.000,00 | R$ 14.439.320.000,00 |
+| 2 | Avatar: The Way of Water | US$ 2.320.250.281,00 | R$ 11.965.298.674,09 |
+| 3 | AVENGERS: INFINITY WAR | US$ 2.052.415.039,00 | R$ 10.584.099.114,62 |
+| 4 | spider-man: no way home | US$ 1.921.847.111,00 | R$ 9.910.773.366,72 |
+| 5 | The Lion King | US$ 1.663.075.401,00 | R$ 8.576.313.535,42 |
+| 6 | Top Gun: Maverick | US$ 1.488.732.821,00 | R$ 7.677.246.284,61 |
+| 7 | Barbie | US$ 1.428.545.028,00 | R$ 7.366.863.854,89 |
+| 8 | The Super Mario Bros. Movie | US$ 1.355.725.263,00 | R$ 6.991.339.608,76 |
+| 9 | Black Panther | US$ 1.349.926.083,00 | R$ 6.961.433.817,42 |
+| 10 | Star Wars: The Last Jedi | US$ 1.332.698.830,00 | R$ 6.872.594.596,43 |
 
 > **Nota Cambial**: A conversão da receita para Reais (R$) foi realizada utilizando a cotação PTAX de Compra do Banco Central de **R$ 5,1569** por dólar (referência de 18/09/2026), padronizada no pipeline Silver.
 
