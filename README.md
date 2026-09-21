@@ -24,25 +24,36 @@ Todas as análises foram executadas sobre a camada **Gold** (`gold.fact_movies_p
 | :---: | :--- | :---: |
 | 1º | blue beetle | 2994.357 |
 | 2º | Gran Turismo | 2680.593 |
-| 3º | La Fellinette | 2020.000 |
-| 4º | The Fear Footage 2: Curse of the Tape | 2019.000 |
-| 5º | wwe survivor series 2018 | 2018.000 |
+| 3º | The Nun II | 1692.778 |
+| 4º | Meg 2: The Trench | 1567.273 |
+| 5º | retribution | 1547.220 |
+
+> **Nota (Tratamento de *Column Shift*)**: No arquivo bruto de origem (`movies_metrics_IMDB_TMDB.csv`), linhas com descompasso estrutural empurraram anos inteiros de lançamento (`2020`, `2019`, `2018`) para a coluna de popularidade. A camada Silver implementou a neutralização desse deslocamento via `try_cast` e detecção de caracteres textuais nos campos de notas/votos, expurgando falsos positivos e garantindo a integridade analítica das métricas.
 
 ---
 
 ### Pergunta 3: Quantos filmes cada gênero possui? (Maior para menor)
-| Gênero Canônico | Qtd. Filmes | Gênero Canônico | Qtd. Filmes |
-| :--- | :---: | :--- | :---: |
-| **Drama** | 32.286 | **TV Movie** | 4.079 |
-| **Documentary** | 18.996 | **Science Fiction** | 3.769 |
-| **Comedy** | 18.624 | **Family** | 3.722 |
-| **Thriller** | 10.274 | **Mystery** | 3.317 |
-| **Horror** | 9.729 | **Fantasy** | 3.278 |
-| **Romance** | 7.639 | **Adventure** | 2.870 |
-| **Action** | 6.049 | **Music** | 2.792 |
-| **Crime** | 4.747 | **History** | 2.416 |
-| **Animation** | 4.469 | **War** | 960 |
-| | | **Western** | 410 |
+| Rank | Gênero Canônico | Qtd. Filmes |
+| :---: | :--- | :---: |
+| **1º** | Drama | 32.286 |
+| **2º** | Documentary | 18.996 |
+| **3º** | Comedy | 18.624 |
+| **4º** | Thriller | 10.274 |
+| **5º** | Horror | 9.729 |
+| **6º** | Romance | 7.639 |
+| **7º** | Action | 6.049 |
+| **8º** | Crime | 4.747 |
+| **9º** | Animation | 4.469 |
+| **10º** | TV Movie | 4.079 |
+| **11º** | Science Fiction | 3.769 |
+| **12º** | Family | 3.722 |
+| **13º** | Mystery | 3.317 |
+| **14º** | Fantasy | 3.278 |
+| **15º** | Adventure | 2.870 |
+| **16º** | Music | 2.792 |
+| **17º** | History | 2.416 |
+| **18º** | War | 960 |
+| **19º** | Western | 410 |
 
 ---
 

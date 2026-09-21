@@ -64,4 +64,3 @@ databricks -p "$PROFILE" jobs reset --json "$JOB_SETTINGS_JSON"
 log "Deploy concluído com sucesso!"
 echo "Notebooks disponíveis no workspace:"
 databricks -p "$PROFILE" workspace list "$WORKSPACE_DIR"
-E
